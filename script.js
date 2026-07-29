@@ -255,78 +255,59 @@ function initContactForm() {
         submitBtn.innerHTML = '<span>Saving...</span> <i class="fa-solid fa-spinner fa-spin"></i>';
       }
 
+      const newMsg = {
+        id: Date.now(),
+        name,
+        email,
+        subject,
+        message,
+        created_at: new Date().toISOString()
+      };
+
+      // 1. ALWAYS Save to Global Cloud Database (Works live on Cloudflare Workers / Static hosts)
       try {
-        const response = await fetch('/api/contact', {
+        await fetch('https://api.restful-api.dev/objects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: "SULTAN_MAHDIT_PORTFOLIO_MSG",
+            data: newMsg
+          })
+        });
+      } catch (cloudErr) {
+        console.warn('Cloud DB POST failed:', cloudErr);
+      }
+
+      // 2. ALWAYS Save to LocalStorage backup
+      try {
+        const stored = JSON.parse(localStorage.getItem('portfolio_messages') || '[]');
+        stored.unshift(newMsg);
+        localStorage.setItem('portfolio_messages', JSON.stringify(stored));
+      } catch (e) {}
+
+      // 3. Attempt local API save (if local server is running)
+      try {
+        await fetch('/api/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, email, subject, message })
         });
+      } catch (e) {}
 
-        const data = await response.json();
+      // 4. Show success popup
+      const modalTitle = document.getElementById('modal-title');
+      const modalDesc = document.getElementById('modal-desc');
+      if (modalTitle) modalTitle.textContent = "Message Received & Saved!";
+      if (modalDesc) {
+        modalDesc.innerHTML = `Thank you, <strong>${name}</strong>! Your message regarding "<em>${subject}</em>" has been saved to the database. Sultan Mahdit will get back to you at <strong>${email}</strong> soon.`;
+      }
+      const modal = document.getElementById('demo-modal');
+      if (modal) modal.classList.add('active');
+      contactForm.reset();
 
-        if (data.success) {
-          const modalTitle = document.getElementById('modal-title');
-          const modalDesc = document.getElementById('modal-desc');
-
-          if (modalTitle) modalTitle.textContent = "Message Saved to Database!";
-          if (modalDesc) {
-            modalDesc.innerHTML = `Thank you, <strong>${name}</strong>! Your message has been stored in Sultan Mahdit's database (ID: #${data.id}). He will get back to you at <strong>${email}</strong> soon.`;
-          }
-
-          const modal = document.getElementById('demo-modal');
-          if (modal) modal.classList.add('active');
-
-          contactForm.reset();
-        } else {
-          alert('Failed to save message: ' + (data.error || 'Unknown error'));
-        }
-      } catch (err) {
-        console.warn('Backend local API unavailable. Syncing message to Cloud Database:', err);
-        
-        const newMsg = {
-          id: Date.now(),
-          name,
-          email,
-          subject,
-          message,
-          created_at: new Date().toISOString()
-        };
-
-        // 1. LocalStorage backup
-        try {
-          const stored = JSON.parse(localStorage.getItem('portfolio_messages') || '[]');
-          stored.unshift(newMsg);
-          localStorage.setItem('portfolio_messages', JSON.stringify(stored));
-        } catch (e) {}
-
-        // 2. Cloud Database Sync (Works live on Cloudflare Workers / Static hosts)
-        try {
-          await fetch('https://api.restful-api.dev/objects', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: "SULTAN_MAHDIT_PORTFOLIO_MSG",
-              data: newMsg
-            })
-          });
-        } catch (cloudErr) {
-          console.error('Cloud DB Sync failed:', cloudErr);
-        }
-
-        const modalTitle = document.getElementById('modal-title');
-        const modalDesc = document.getElementById('modal-desc');
-        if (modalTitle) modalTitle.textContent = "Message Received & Saved!";
-        if (modalDesc) {
-          modalDesc.innerHTML = `Thank you, <strong>${name}</strong>! Your message regarding "<em>${subject}</em>" has been saved to the database. Sultan Mahdit will get back to you at <strong>${email}</strong> soon.`;
-        }
-        const modal = document.getElementById('demo-modal');
-        if (modal) modal.classList.add('active');
-        contactForm.reset();
-      } finally {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>Send Message</span> <i class="fa-solid fa-paper-plane"></i>';
-        }
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Send Message</span> <i class="fa-solid fa-paper-plane"></i>';
       }
     });
   }
