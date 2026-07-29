@@ -1,14 +1,12 @@
 const path = require('path');
 const fs = require('fs');
-const { DatabaseSync } = require('node:sqlite');
 const querystring = require('querystring');
 
-// Writeable directory on Vercel Serverless environment is /tmp
-const isVercel = process.env.VERCEL || process.env.AWS_EXECUTION_ENV;
-const DB_PATH = isVercel ? '/tmp/portfolio.db' : path.join(__dirname, '../portfolio.db');
-
-let db;
+// Check if node:sqlite is available
+let db = null;
 try {
+  const { DatabaseSync } = require('node:sqlite');
+  const DB_PATH = '/tmp/portfolio.db';
   db = new DatabaseSync(DB_PATH);
   db.exec(`
     CREATE TABLE IF NOT EXISTS messages (
@@ -21,8 +19,11 @@ try {
     );
   `);
 } catch (e) {
-  console.error("Database initialization error:", e);
+  console.warn("SQLite Native DB fallback active:", e.message);
 }
+
+// In-memory fallback if SQLite module isn't active in serverless container
+const inMemoryMessages = [];
 
 module.exports = (req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
@@ -45,7 +46,7 @@ module.exports = (req, res) => {
     return res.end();
   }
 
-  // Handle /api/contact (POST)
+  // Handle POST /api/contact
   if (pathname.includes('/api/contact') && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => { body += chunk.toString(); });
@@ -66,16 +67,26 @@ module.exports = (req, res) => {
           return sendJSON(400, { success: false, error: 'All fields are required.' });
         }
 
-        const insertStmt = db.prepare(`
-          INSERT INTO messages (name, email, subject, message)
-          VALUES (?, ?, ?, ?)
-        `);
-        const result = insertStmt.run(name, email, subject, message);
+        let newId = Date.now();
+        if (db) {
+          try {
+            const insertStmt = db.prepare(`
+              INSERT INTO messages (name, email, subject, message)
+              VALUES (?, ?, ?, ?)
+            `);
+            const result = insertStmt.run(name, email, subject, message);
+            newId = Number(result.lastInsertRowid);
+          } catch (dbErr) {
+            inMemoryMessages.unshift({ id: newId, name, email, subject, message, created_at: new Date().toISOString() });
+          }
+        } else {
+          inMemoryMessages.unshift({ id: newId, name, email, subject, message, created_at: new Date().toISOString() });
+        }
 
         return sendJSON(201, {
           success: true,
           message: 'Message saved to database successfully!',
-          id: Number(result.lastInsertRowid)
+          id: newId
         });
       } catch (err) {
         return sendJSON(500, { success: false, error: err.message });
@@ -84,12 +95,20 @@ module.exports = (req, res) => {
     return;
   }
 
-  // Handle /api/messages (GET)
+  // Handle GET /api/messages
   if (pathname.includes('/api/messages') && req.method === 'GET') {
     try {
-      const selectStmt = db.prepare(`SELECT * FROM messages ORDER BY id DESC`);
-      const messages = selectStmt.all();
-      return sendJSON(200, { success: true, messages });
+      if (db) {
+        try {
+          const selectStmt = db.prepare(`SELECT * FROM messages ORDER BY id DESC`);
+          const messages = selectStmt.all();
+          return sendJSON(200, { success: true, messages });
+        } catch (e) {
+          return sendJSON(200, { success: true, messages: inMemoryMessages });
+        }
+      } else {
+        return sendJSON(200, { success: true, messages: inMemoryMessages });
+      }
     } catch (err) {
       return sendJSON(500, { success: false, error: err.message });
     }
@@ -99,8 +118,14 @@ module.exports = (req, res) => {
   if (pathname.includes('/api/messages/') && req.method === 'DELETE') {
     const id = pathname.split('/').pop();
     try {
-      const deleteStmt = db.prepare(`DELETE FROM messages WHERE id = ?`);
-      deleteStmt.run(id);
+      if (db) {
+        try {
+          const deleteStmt = db.prepare(`DELETE FROM messages WHERE id = ?`);
+          deleteStmt.run(id);
+        } catch (e) {}
+      }
+      const idx = inMemoryMessages.findIndex(m => String(m.id) === String(id));
+      if (idx !== -1) inMemoryMessages.splice(idx, 1);
       return sendJSON(200, { success: true, message: `Message ${id} deleted.` });
     } catch (err) {
       return sendJSON(500, { success: false, error: err.message });

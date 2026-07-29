@@ -199,14 +199,28 @@ function initProjectModals() {
   }
 }
 
-function openDemoModal(title) {
+function openDemoModal(projectId) {
   const modal = document.getElementById('demo-modal');
   const modalTitle = document.getElementById('modal-title');
   const modalDesc = document.getElementById('modal-desc');
 
-  if (modalTitle) modalTitle.textContent = title;
+  const data = projectData[projectId] || {
+    title: projectId,
+    description: `You are viewing the live interactive demo preview of "${projectId}". This project showcases Sultan Mahdit's expertise in web engineering, clean code structure, and responsive design.`,
+    tags: ["HTML5", "CSS3", "JavaScript"]
+  };
+
+  if (modalTitle) modalTitle.textContent = data.title;
   if (modalDesc) {
-    modalDesc.textContent = `You are viewing the live interactive demo preview of "${title}". This project showcases Sultan Mahdit's expertise in web engineering, clean code structure, and responsive design.`;
+    modalDesc.innerHTML = `
+      <p style="margin-bottom: 1rem; color: #cbd5e1;">${data.description}</p>
+      <div style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        ${(data.tags || []).map(t => `<span style="background: rgba(0,242,254,0.15); color: #00f2fe; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">${t}</span>`).join('')}
+      </div>
+      <a href="https://github.com/sheikhmonmoy56" target="_blank" rel="noopener" class="btn btn-primary" style="display: inline-flex; width: 100%; text-decoration: none; margin-top: 0.5rem; justify-content: center; gap: 0.5rem;">
+        <i class="fa-brands fa-github"></i> View Repository on GitHub
+      </a>
+    `;
   }
   if (modal) modal.classList.add('active');
 }
