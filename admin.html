@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Sultan Mahdit Portfolio DB</title>
+  <link rel="icon" type="image/png" href="assets/images/favicon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #060d19;
+      color: #f8fafc;
+      padding: 2rem;
+    }
+    .admin-container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    h1 { font-family: 'Outfit', sans-serif; font-size: 2rem; color: #00f2fe; }
+    .btn {
+      background: #00f2fe;
+      color: #0b132b;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 20px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #f8fafc;
+    }
+    .stats-bar {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .stat-box {
+      background: rgba(17, 34, 64, 0.8);
+      border: 1px solid rgba(0, 242, 254, 0.2);
+      padding: 1.25rem 2rem;
+      border-radius: 12px;
+      flex: 1;
+    }
+    .stat-box h3 { font-size: 0.9rem; color: #94a3b8; margin-bottom: 0.25rem; }
+    .stat-box p { font-size: 1.8rem; font-weight: 700; color: #64ffda; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(17, 34, 64, 0.6);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    th, td {
+      padding: 1rem 1.25rem;
+      text-align: left;
+    }
+    th {
+      background: rgba(11, 19, 43, 0.9);
+      font-family: 'Outfit', sans-serif;
+      color: #00f2fe;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    tr:nth-child(even) { background: rgba(255, 255, 255, 0.02); }
+    tr:hover { background: rgba(0, 242, 254, 0.05); }
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border: 1px solid #ef4444;
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .btn-danger:hover { background: #ef4444; color: #fff; }
+    .empty-state { text-align: center; padding: 3rem; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <header>
+      <h1><i class="fa-solid fa-database"></i> Portfolio Database Admin</h1>
+      <div>
+        <a href="/" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back to Portfolio</a>
+        <button class="btn" onclick="fetchMessages()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+      </div>
+    </header>
+
+    <div class="stats-bar">
+      <div class="stat-box">
+        <h3>Database File</h3>
+        <p style="font-size: 1.2rem; color: #00f2fe;">portfolio.db (SQLite)</p>
+      </div>
+      <div class="stat-box">
+        <h3>Total Messages</h3>
+        <p id="total-count">0</p>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Subject</th>
+          <th>Message</th>
+          <th>Date Saved</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="messages-tbody">
+        <tr>
+          <td colspan="7" class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Loading messages from database...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    async function fetchMessages() {
+      const tbody = document.getElementById('messages-tbody');
+      const countEl = document.getElementById('total-count');
+      try {
+        const res = await fetch('/api/messages');
+        const data = await res.json();
+        
+        if (data.success) {
+          countEl.textContent = data.messages.length;
+          if (data.messages.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No messages stored in the database yet. Send a test message from the contact form!</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = data.messages.map(msg => `
+            <tr>
+              <td><strong>#${msg.id}</strong></td>
+              <td>${escapeHTML(msg.name)}</td>
+              <td><a href="mailto:${escapeHTML(msg.email)}" style="color: #00f2fe;">${escapeHTML(msg.email)}</a></td>
+              <td>${escapeHTML(msg.subject)}</td>
+              <td style="max-width: 300px; word-break: break-word;">${escapeHTML(msg.message)}</td>
+              <td style="font-size: 0.85rem; color: #94a3b8;">${new Date(msg.created_at).toLocaleString()}</td>
+              <td>
+                <button class="btn-danger" onclick="deleteMessage(${msg.id})">
+                  <i class="fa-solid fa-trash"></i> Delete
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state" style="color: #ef4444;">Failed to connect to database server.</td></tr>';
+      }
+    }
+
+    async function deleteMessage(id) {
+      if (!confirm(`Are you sure you want to delete message #${id}?`)) return;
+      try {
+        const res = await fetch(`/api/messages/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          fetchMessages();
+        }
+      } catch (err) {
+        alert('Failed to delete message.');
+      }
+    }
+
+    function escapeHTML(str) {
+      return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchMessages);
+  </script>
+</body>
+</html>
