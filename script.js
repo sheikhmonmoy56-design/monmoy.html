@@ -88,10 +88,10 @@ function initTypewriter() {
   if (!typewriterElement) return;
 
   const roles = [
-    "Aspiring Web Development Engineer",
-    "BSc Web Engineering Student",
-    "Frontend & Responsive Web Enthusiast",
-    "Creative Problem Solver"
+    "ওয়েব ডেভেলপমেন্ট ইঞ্জিনিয়ার",
+    "বিএসসি ওয়েব ইঞ্জিনিয়ারিং শিক্ষার্থী",
+    "ফ্রন্টএন্ড ও রেসপনসিভ ওয়েব অনুরাগী",
+    "ক্রিয়েটিভ প্রবলেম সলভার"
   ];
 
   let roleIndex = 0;
@@ -158,21 +158,21 @@ function initScrollEffects() {
    ========================================================================== */
 const projectData = {
   "1": {
-    title: "English Learning Web App",
-    description: "An interactive web platform designed for learning English course materials, responsive study modules, and clean frontend UI.",
-    tags: ["HTML5", "CSS3", "JavaScript", "Web App"],
+    title: "ইংলিশ লার্নিং ওয়েব অ্যাপ",
+    description: "ইংরেজি কোর্সের বিষয়বস্তু শেখা, রেসপনসিভ স্টাডি মডিউল এবং আকর্ষণীয় ফ্রন্টএন্ড ইউআই সহ একটি ইন্টারেক্টিভ ওয়েব প্ল্যাটফর্ম।",
+    tags: ["HTML5", "CSS3", "JavaScript", "ওয়েব অ্যাপ"],
     githubUrl: "https://github.com/sheikhmonmoy56-design/english-"
   },
   "2": {
-    title: "AI Tools & Resources Web",
-    description: "A comprehensive web portal showcasing curated AI tools, category filters, responsive cards, and modern dark mode styling.",
-    tags: ["UI/UX", "AI Tools", "Responsive Design", "CSS3"],
+    title: "এআই টুলস এবং রিসোর্স ওয়েব",
+    description: "বাছাইকৃত এআই টুলস, ক্যাটাগরি ফিল্টার, রেসপনসিভ কার্ড এবং আধুনিক ডার্ক মোড স্টাইল সম্বলিত একটি পূর্ণাঙ্গ ওয়েব পোর্টাল।",
+    tags: ["UI/UX", "AI Tools", "রেসপনসিভ ডিজাইন", "CSS3"],
     githubUrl: "https://github.com/sheikhmonmoy56-design/ai_tools_website"
   },
   "3": {
-    title: "Interactive Web Platform",
-    description: "A clean productivity and web engineering application with status filters, interactive animations, and responsive card views.",
-    tags: ["JavaScript ES6+", "DOM Logic", "Web Engineering"],
+    title: "ইন্টারেক্টিভ ওয়েব প্ল্যাটফর্ম",
+    description: "স্ট্যাটাস ফিল্টার, ইন্টারেক্টিভ অ্যানিমেশন এবং রেসপনসিভ কার্ড ভিউ সহ একটি প্রোডাক্টভিটি ও ওয়েব ইঞ্জিনিয়ারিং অ্যাপ্লিকেশন।",
+    tags: ["JavaScript ES6+", "DOM Logic", "ওয়েব ইঞ্জিনিয়ারিং"],
     githubUrl: "https://github.com/sheikhmonmoy56-design/"
   }
 };
@@ -203,8 +203,8 @@ function openDemoModal(projectId) {
   const modalDesc = document.getElementById('modal-desc');
 
   const data = projectData[projectId] || {
-    title: "Project Showcase",
-    description: `You are viewing project details by Sultan Mahdit.`,
+    title: "প্রজেক্ট ডেমো",
+    description: `আপনি সুলতান মাহদিত-এর প্রজেক্ট বিবরণ দেখছেন।`,
     tags: ["HTML5", "CSS3", "JavaScript"],
     githubUrl: "https://github.com/sheikhmonmoy56-design"
   };
@@ -217,7 +217,7 @@ function openDemoModal(projectId) {
         ${(data.tags || []).map(t => `<span style="background: rgba(0,242,254,0.15); color: #00f2fe; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">${t}</span>`).join('')}
       </div>
       <a href="${data.githubUrl}" target="_blank" rel="noopener" class="btn btn-primary" style="display: inline-flex; width: 100%; text-decoration: none; margin-top: 0.5rem; justify-content: center; gap: 0.5rem;">
-        <i class="fa-brands fa-github"></i> Open Repository on GitHub
+        <i class="fa-brands fa-github"></i> গিটহাবে রিপোজিটরি দেখুন
       </a>
     `;
   }
@@ -245,14 +245,14 @@ function initContactForm() {
       const message = document.getElementById('message').value.trim();
 
       if (!name || !email || !subject || !message) {
-        alert('Please complete all required fields.');
+        alert('অনুগ্রহ করে সমস্ত প্রয়োজনীয় ঘরগুলো পূরণ করুন।');
         return;
       }
 
       const submitBtn = contactForm.querySelector('.submit-btn');
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>Saving...</span> <i class="fa-solid fa-spinner fa-spin"></i>';
+        submitBtn.innerHTML = '<span>সংরক্ষণ করা হচ্ছে...</span> <i class="fa-solid fa-spinner fa-spin"></i>';
       }
 
       const newMsg = {
@@ -297,9 +297,9 @@ function initContactForm() {
       // 4. Show success popup
       const modalTitle = document.getElementById('modal-title');
       const modalDesc = document.getElementById('modal-desc');
-      if (modalTitle) modalTitle.textContent = "Message Received & Saved!";
+      if (modalTitle) modalTitle.textContent = "বার্তা সফলভাবে গৃহীত হয়েছে!";
       if (modalDesc) {
-        modalDesc.innerHTML = `Thank you, <strong>${name}</strong>! Your message regarding "<em>${subject}</em>" has been saved to the database. Sultan Mahdit will get back to you at <strong>${email}</strong> soon.`;
+        modalDesc.innerHTML = `ধন্যবাদ, <strong>${name}</strong>! "<em>${subject}</em>" বিষয়ে আপনার বার্তাটি সংরক্ষণ করা হয়েছে। সুলতান মাহদিত শীঘ্রই <strong>${email}</strong> ঠিকানায় আপনার সাথে যোগাযোগ করবেন।`;
       }
       const modal = document.getElementById('demo-modal');
       if (modal) modal.classList.add('active');
@@ -307,7 +307,7 @@ function initContactForm() {
 
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<span>Send Message</span> <i class="fa-solid fa-paper-plane"></i>';
+        submitBtn.innerHTML = '<span>বার্তা পাঠান</span> <i class="fa-solid fa-paper-plane"></i>';
       }
     });
   }
@@ -378,9 +378,9 @@ function showCopyModal(text, type) {
   const modalTitle = document.getElementById('modal-title');
   const modalDesc = document.getElementById('modal-desc');
 
-  if (modalTitle) modalTitle.textContent = `${type} Copied!`;
+  if (modalTitle) modalTitle.textContent = `${type} কপি হয়েছে!`;
   if (modalDesc) {
-    modalDesc.innerHTML = `<strong>${text}</strong> has been copied to your clipboard successfully. You can now paste it anywhere!`;
+    modalDesc.innerHTML = `<strong>${text}</strong> আপনার ক্লিপবোর্ডে সফলভাবে কপি হয়েছে। আপনি এটি এখন যেকোনো জায়গায় পেস্ট করতে পারবেন!`;
   }
 
   const modal = document.getElementById('demo-modal');
