@@ -158,19 +158,22 @@ function initScrollEffects() {
    ========================================================================== */
 const projectData = {
   "1": {
-    title: "Web Engineering Dashboard",
-    description: "A comprehensive administrative web application layout built using HTML5, modern CSS3 Grid/Flexbox, and JavaScript. Designed with clean data visualizations, dark navy blue themes, and cyan interactive elements.",
-    tags: ["HTML5", "CSS3", "JavaScript", "Responsive Design"]
+    title: "English Learning Web App",
+    description: "An interactive web platform designed for learning English course materials, responsive study modules, and clean frontend UI.",
+    tags: ["HTML5", "CSS3", "JavaScript", "Web App"],
+    githubUrl: "https://github.com/sheikhmonmoy56-design/english-"
   },
   "2": {
-    title: "E-Commerce Web Platform",
-    description: "A responsive online store interface featuring glassmorphic product showcase cards, custom category filtering, and smooth hover interactions tailored for modern desktop and mobile shoppers.",
-    tags: ["UI/UX", "Glassmorphism", "CSS Animations", "Mobile-First"]
+    title: "AI Tools & Resources Web",
+    description: "A comprehensive web portal showcasing curated AI tools, category filters, responsive cards, and modern dark mode styling.",
+    tags: ["UI/UX", "AI Tools", "Responsive Design", "CSS3"],
+    githubUrl: "https://github.com/sheikhmonmoy56-design/ai_tools_website"
   },
   "3": {
-    title: "Interactive Task Manager",
-    description: "A functional productivity web application allowing users to organize, filter, and track daily tasks with real-time DOM manipulation and local state management.",
-    tags: ["JavaScript ES6+", "DOM Logic", "Web App UI"]
+    title: "Interactive Web Platform",
+    description: "A clean productivity and web engineering application with status filters, interactive animations, and responsive card views.",
+    tags: ["JavaScript ES6+", "DOM Logic", "Web Engineering"],
+    githubUrl: "https://github.com/sheikhmonmoy56-design/"
   }
 };
 
@@ -182,12 +185,7 @@ function initProjectModals() {
   detailButtons.forEach(btn => {
     btn.addEventListener('click', (e) => {
       const projectId = btn.getAttribute('data-project');
-      const data = projectData[projectId];
-      if (data) {
-        document.getElementById('modal-title').textContent = data.title;
-        document.getElementById('modal-desc').textContent = data.description;
-        if (modal) modal.classList.add('active');
-      }
+      openDemoModal(projectId);
     });
   });
 
@@ -205,9 +203,10 @@ function openDemoModal(projectId) {
   const modalDesc = document.getElementById('modal-desc');
 
   const data = projectData[projectId] || {
-    title: projectId,
-    description: `You are viewing the live interactive demo preview of "${projectId}". This project showcases Sultan Mahdit's expertise in web engineering, clean code structure, and responsive design.`,
-    tags: ["HTML5", "CSS3", "JavaScript"]
+    title: "Project Showcase",
+    description: `You are viewing project details by Sultan Mahdit.`,
+    tags: ["HTML5", "CSS3", "JavaScript"],
+    githubUrl: "https://github.com/sheikhmonmoy56-design"
   };
 
   if (modalTitle) modalTitle.textContent = data.title;
@@ -217,8 +216,8 @@ function openDemoModal(projectId) {
       <div style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap;">
         ${(data.tags || []).map(t => `<span style="background: rgba(0,242,254,0.15); color: #00f2fe; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">${t}</span>`).join('')}
       </div>
-      <a href="https://github.com/sheikhmonmoy56" target="_blank" rel="noopener" class="btn btn-primary" style="display: inline-flex; width: 100%; text-decoration: none; margin-top: 0.5rem; justify-content: center; gap: 0.5rem;">
-        <i class="fa-brands fa-github"></i> View Repository on GitHub
+      <a href="${data.githubUrl}" target="_blank" rel="noopener" class="btn btn-primary" style="display: inline-flex; width: 100%; text-decoration: none; margin-top: 0.5rem; justify-content: center; gap: 0.5rem;">
+        <i class="fa-brands fa-github"></i> Open Repository on GitHub
       </a>
     `;
   }
