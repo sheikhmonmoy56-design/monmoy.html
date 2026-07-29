@@ -137,49 +137,108 @@
     async function fetchMessages() {
       const tbody = document.getElementById('messages-tbody');
       const countEl = document.getElementById('total-count');
+      let messages = [];
+      let isLocalFallback = false;
+
       try {
         const res = await fetch('/api/messages');
-        const data = await res.json();
-        
-        if (data.success) {
-          countEl.textContent = data.messages.length;
-          if (data.messages.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No messages stored in the database yet. Send a test message from the contact form!</td></tr>';
-            return;
+        if (res.ok) {
+          const contentType = res.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const data = await res.json();
+            if (data.success && Array.isArray(data.messages)) {
+              messages = data.messages;
+            }
           }
-
-          tbody.innerHTML = data.messages.map(msg => `
-            <tr>
-              <td><strong>#${msg.id}</strong></td>
-              <td>${escapeHTML(msg.name)}</td>
-              <td><a href="mailto:${escapeHTML(msg.email)}" style="color: #00f2fe;">${escapeHTML(msg.email)}</a></td>
-              <td>${escapeHTML(msg.subject)}</td>
-              <td style="max-width: 300px; word-break: break-word;">${escapeHTML(msg.message)}</td>
-              <td style="font-size: 0.85rem; color: #94a3b8;">${new Date(msg.created_at).toLocaleString()}</td>
-              <td>
-                <button class="btn-danger" onclick="deleteMessage(${msg.id})">
-                  <i class="fa-solid fa-trash"></i> Delete
-                </button>
-              </td>
-            </tr>
-          `).join('');
         }
       } catch (err) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-state" style="color: #ef4444;">Failed to connect to database server.</td></tr>';
+        console.warn('API backend unavailable, using localStorage messages fallback');
       }
+
+      // If no server messages, query Cloud Database & LocalStorage
+      if (messages.length === 0) {
+        try {
+          const cloudRes = await fetch('https://api.restful-api.dev/objects');
+          if (cloudRes.ok) {
+            const cloudItems = await cloudRes.json();
+            if (Array.isArray(cloudItems)) {
+              const portfolioMsgs = cloudItems
+                .filter(item => item.name === "SULTAN_MAHDIT_PORTFOLIO_MSG" && item.data)
+                .map(item => ({
+                  cloudId: item.id,
+                  id: item.data.id || item.id,
+                  name: item.data.name,
+                  email: item.data.email,
+                  subject: item.data.subject,
+                  message: item.data.message,
+                  created_at: item.data.created_at || new Date().toISOString()
+                }));
+              messages = portfolioMsgs;
+            }
+          }
+        } catch (e) {
+          console.warn('Cloud DB fetch failed:', e);
+        }
+
+        // Combine with localStorage if any
+        try {
+          const localData = JSON.parse(localStorage.getItem('portfolio_messages') || '[]');
+          if (Array.isArray(localData) && localData.length > 0) {
+            // merge unique by id
+            localData.forEach(lm => {
+              if (!messages.some(m => String(m.id) === String(lm.id))) {
+                messages.push(lm);
+              }
+            });
+          }
+        } catch (e) {}
+      }
+
+      countEl.textContent = messages.length;
+
+      if (messages.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No messages stored yet. Send a test message from the contact form!</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = messages.map(msg => `
+        <tr>
+          <td><strong>#${String(msg.id).slice(-6)}</strong></td>
+          <td>${escapeHTML(msg.name)}</td>
+          <td><a href="mailto:${escapeHTML(msg.email)}" style="color: #00f2fe;">${escapeHTML(msg.email)}</a></td>
+          <td>${escapeHTML(msg.subject)}</td>
+          <td style="max-width: 300px; word-break: break-word;">${escapeHTML(msg.message)}</td>
+          <td style="font-size: 0.85rem; color: #94a3b8;">${new Date(msg.created_at).toLocaleString()}</td>
+          <td>
+            <button class="btn-danger" onclick="deleteMessage('${msg.cloudId || msg.id}')">
+              <i class="fa-solid fa-trash"></i> Delete
+            </button>
+          </td>
+        </tr>
+      `).join('');
     }
 
     async function deleteMessage(id) {
-      if (!confirm(`Are you sure you want to delete message #${id}?`)) return;
+      if (!confirm(`Are you sure you want to delete this message?`)) return;
+      
+      // 1. Attempt server delete
       try {
-        const res = await fetch(`/api/messages/${id}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (data.success) {
-          fetchMessages();
-        }
-      } catch (err) {
-        alert('Failed to delete message.');
-      }
+        await fetch(`/api/messages/${id}`, { method: 'DELETE' });
+      } catch (e) {}
+
+      // 2. Attempt Cloud DB delete
+      try {
+        await fetch(`https://api.restful-api.dev/objects/${id}`, { method: 'DELETE' });
+      } catch (e) {}
+
+      // 3. Delete from localStorage fallback
+      try {
+        let localData = JSON.parse(localStorage.getItem('portfolio_messages') || '[]');
+        localData = localData.filter(m => String(m.id) !== String(id) && String(m.cloudId) !== String(id));
+        localStorage.setItem('portfolio_messages', JSON.stringify(localData));
+      } catch (e) {}
+
+      fetchMessages();
     }
 
     function escapeHTML(str) {
